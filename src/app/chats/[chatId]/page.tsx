@@ -5,10 +5,9 @@ import { Button } from "@/components/ui/button";
 import { db } from "@/lib/db";
 import { chats } from "@/lib/db/schema";
 import { checkSubscription } from "@/lib/subscription";
-// import { checkSubscription } from "@/lib/subscription";
 import { auth } from "@clerk/nextjs";
 import { eq } from "drizzle-orm";
-import { DownloadIcon } from "lucide-react";
+import { DownloadIcon, FileText } from "lucide-react";
 import { redirect } from "next/navigation";
 import React from "react";
 
@@ -32,37 +31,48 @@ const ChatPage = async ({ params: { chatId } }: Props) => {
   }
 
   const currentChat = _chats.find((chat) => chat.id === parseInt(chatId));
-  // console.log(currentChat)
 
   const isPro = await checkSubscription();
 
   return (
-    <div className="flex max-h-screen overflow-scroll">
-      <div className="flex w-full max-h-screen overflow-scroll">
-        {/* chat sidebar */}
-        <div className="flex-[1] max-w-xs">
-          <ChatSideBar chats={_chats} chatId={parseInt(chatId)} isPro={isPro} />
-        </div>
-        {/* pdf viewer */}
-        <div className="relative max-h-screen p-4 oveflow-scroll flex-[5]">
-          <a
-            href={currentChat?.pdfUrl}
-            download
-            target="_blank"
-            rel="noopener noreferrer"
-            className="absolute top-6 left-6 rounded-md"
-          >
-            <Button className="rounded-lg">
-              <DownloadIcon />
+    <div className="flex h-screen overflow-hidden bg-muted/40">
+      {/* chat sidebar */}
+      <aside className="w-72 shrink-0">
+        <ChatSideBar chats={_chats} chatId={parseInt(chatId)} isPro={isPro} />
+      </aside>
+
+      {/* pdf viewer */}
+      <section className="flex min-w-0 flex-[5] flex-col p-3">
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border bg-background shadow-sm">
+          <div className="flex items-center justify-between gap-3 border-b px-4 py-2.5">
+            <div className="flex min-w-0 items-center gap-2">
+              <FileText className="h-4 w-4 shrink-0 text-primary" />
+              <span className="truncate text-sm font-medium">
+                {currentChat?.pdfName}
+              </span>
+            </div>
+            <Button asChild variant="outline" size="sm" className="shrink-0">
+              <a
+                href={currentChat?.pdfUrl}
+                download
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <DownloadIcon className="mr-2 h-4 w-4" />
+                Download
+              </a>
             </Button>
-          </a>
-          <PDFViewer pdfUrl={currentChat?.pdfUrl || ""} />
+          </div>
+          <div className="min-h-0 flex-1">
+            <PDFViewer pdfUrl={currentChat?.pdfUrl || ""} />
+          </div>
         </div>
-        {/* chat component */}
-        <div className="flex-[3] border-l-4 border-l-slate-200">
-          <ChatComponent chatId={parseInt(chatId)} />
-        </div>
-      </div>
+      </section>
+
+      {/* chat component */}
+      <section className="flex min-w-[340px] flex-[3] flex-col border-l bg-background">
+        <ChatComponent chatId={parseInt(chatId)} />
+      </section>
     </div>
   );
 };

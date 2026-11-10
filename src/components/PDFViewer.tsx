@@ -8,7 +8,7 @@ const PDFViewer = ({ pdfUrl }: Props) => {
       <iframe
         key={pdfUrl}
         src={`https://docs.google.com/gview?url=${pdfUrl}&embedded=true`}
-        className="w-full h-full"
+        className="h-full w-full border-0"
       />
     </>
   );

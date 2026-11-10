@@ -3,9 +3,8 @@ import { DrizzleChat } from "@/lib/db/schema"
 import Link from "next/link"
 import React from "react"
 import { Button } from "./ui/button"
-import { MessageCircle, PlusCircle } from "lucide-react"
+import { FileText, Home, LogOut, Plus } from "lucide-react"
 import { cn } from "@/lib/utils"
-import axios from "axios"
 import SubscriptionButton from "./SubscriptionButton"
 import { SignOutButton } from "@clerk/nextjs"
 
@@ -16,69 +15,87 @@ type Props = {
 }
 
 const ChatSideBar = ({ chats, chatId, isPro }: Props) => {
-  const [loading, setLoading] = React.useState(false)
-  const handleSubscription = async () => {
-    try {
-      setLoading(true)
-      const response = await axios.get("/api/stripe")
-      window.location.href = response.data.url
-    } catch (error) {
-      console.error(error)
-    } finally {
-      setLoading(false)
-    }
-  }
   return (
-    <div className="w-full h-screen overflow-scroll soff p-4 text-gray-200 bg-gray-900">
-      <Link href="/">
-        <Button className="w-full border-dashed border-white border">
-          <PlusCircle className="mr-2 w-4 h-4" />
-          New Chat
-        </Button>
-      </Link>
-
-      <div className="flex h-screen overflow-scroll pb-20 flex-col gap-2 mt-4">
-        {chats.map((chat) => (
-          <Link key={chat.id} href={`/chats/${chat.id}`}>
-            <div
-              className={cn("rounded-lg p-3 text-slate-300 flex items-center", {
-                "bg-blue-600 text-white": chat.id === chatId,
-                "hover:text-white": chat.id !== chatId,
-              })}
-            >
-              <MessageCircle className="mr-2" />
-              <p className="w-full overflow-hidden text-sm truncate whitespace-nowrap text-ellipsis">
-                {chat.pdfName}
-              </p>
-            </div>
+    <div className="flex h-full w-full flex-col bg-zinc-950 text-zinc-400">
+      <div className="space-y-4 p-4">
+        <Link
+          href="/"
+          className="flex items-center gap-2 px-1 font-semibold text-white"
+        >
+          <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+            <FileText className="h-4 w-4" />
+          </span>
+          ChatPDF
+        </Link>
+        <Button
+          asChild
+          className="w-full justify-start border border-white/10 bg-white/5 text-white hover:bg-white/10"
+        >
+          <Link href="/">
+            <Plus className="mr-2 h-4 w-4" />
+            New chat
           </Link>
-        ))}
-        <div className="absolute bottom-4 left-4">
-          <div className="flex items-center gap-2 text-sm text-slate-500 flex-wrap">
-            <Link href="/">
-              <Button className="bg-blue-700" variant="default">
-                Home
-              </Button>
+        </Button>
+      </div>
+
+      <p className="px-5 pb-2 text-[11px] font-medium uppercase tracking-wider text-zinc-500">
+        Your documents
+      </p>
+      <nav className="flex-1 space-y-0.5 overflow-y-auto px-2">
+        {chats.map((chat) => {
+          const active = chat.id === chatId
+          return (
+            <Link
+              key={chat.id}
+              href={`/chats/${chat.id}`}
+              className={cn(
+                "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors",
+                active
+                  ? "bg-white/10 text-white"
+                  : "hover:bg-white/5 hover:text-zinc-100"
+              )}
+            >
+              <FileText
+                className={cn(
+                  "h-4 w-4 shrink-0",
+                  active ? "text-indigo-400" : "text-zinc-500"
+                )}
+              />
+              <span className="truncate">{chat.pdfName}</span>
             </Link>
-          </div>
-          {isPro && (
-            <div className="mt-2">
-              <SubscriptionButton isPro={isPro} />
-            </div>
-          )}
-          <SignOutButton>
-            <div className="mt-2">
-              <Button variant="destructive">Sign out</Button>
-            </div>
-          </SignOutButton>
-          {/* <Button
-            onClick={handleSubscription}
-            className="mt-2 text-white bg-slate-600"
-            disabled={loading}
+          )
+        })}
+      </nav>
+
+      <div className="space-y-1 border-t border-white/10 p-3">
+        {isPro && (
+          <SubscriptionButton
+            isPro={isPro}
+            variant="ghost"
+            className="w-full justify-start text-zinc-300 hover:bg-white/5 hover:text-white"
+          />
+        )}
+        <Button
+          asChild
+          variant="ghost"
+          className="w-full justify-start text-zinc-300 hover:bg-white/5 hover:text-white"
+        >
+          <Link href="/">
+            <Home className="mr-2 h-4 w-4" />
+            Home
+          </Link>
+        </Button>
+        <SignOutButton signOutCallback={() => {
+            window.location.href = "/"
+          }}>
+          <Button
+            variant="ghost"
+            className="w-full justify-start text-zinc-300 hover:bg-red-500/10 hover:text-red-400"
           >
-            Upgrade
-          </Button> */}
-        </div>
+            <LogOut className="mr-2 h-4 w-4" />
+            Sign out
+          </Button>
+        </SignOutButton>
       </div>
     </div>
   )

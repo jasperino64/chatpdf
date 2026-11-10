@@ -3,7 +3,8 @@ import { useToast } from "@/components/hooks/use-toast"
 import { uploadToS3 } from "@/lib/s3"
 import { useMutation } from "@tanstack/react-query"
 import axios from "axios"
-import { Inbox, Loader2 } from "lucide-react"
+import { cn } from "@/lib/utils"
+import { Loader2, UploadCloud } from "lucide-react"
 import { useRouter } from "next/navigation"
 import React from "react"
 import { useDropzone } from "react-dropzone"
@@ -30,7 +31,7 @@ const FileUpload = (props: Props) => {
     },
   })
 
-  const { getRootProps, getInputProps } = useDropzone({
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
     accept: { "application/pdf": [".pdf"] },
     maxFiles: 1,
     onDrop: async (acceptedFiles) => {
@@ -89,29 +90,41 @@ const FileUpload = (props: Props) => {
       }
     },
   })
+  const busy = uploading || isPending
   return (
-    <div className="p2 bg-white rounded-xl">
-      <div
-        {...getRootProps()}
-        className="border-dashed border-2 rounded-xl cursor-pointer bg-gray-50
-          py-8 flex justify-center items-center flex-col"
-      >
-        <input {...getInputProps()} />
-        {uploading || isPending ? (
-          <>
-            {/*loading */}
-            <Loader2 className="h-10 w-10 text-blue-500 animate-spin" />
-            <p className="mt-2 text-sm text-slate-400">Uploading...</p>
-          </>
+    <div
+      {...getRootProps()}
+      className={cn(
+        "group flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-border bg-muted/40 px-6 py-12 transition-colors hover:border-primary/50 hover:bg-primary/5",
+        isDragActive && "border-primary bg-primary/5",
+        busy && "pointer-events-none"
+      )}
+    >
+      <input {...getInputProps()} />
+      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary transition-transform group-hover:scale-110">
+        {busy ? (
+          <Loader2 className="h-6 w-6 animate-spin" />
         ) : (
-          <>
-            <Inbox className="w-10  h-10 text-blue-500" />
-            <p className="mt-2 text-sm text-slate-400">
-              Drag and drop a PDF here, or click to select a file
-            </p>
-          </>
+          <UploadCloud className="h-6 w-6" />
         )}
       </div>
+      {busy ? (
+        <>
+          <p className="mt-4 text-sm font-medium">Processing your PDF...</p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            This can take a few seconds
+          </p>
+        </>
+      ) : (
+        <>
+          <p className="mt-4 text-sm font-medium">
+            {isDragActive ? "Drop it here" : "Drop your PDF here"}
+          </p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            or click to browse · PDF up to 10MB
+          </p>
+        </>
+      )}
     </div>
   )
 }
