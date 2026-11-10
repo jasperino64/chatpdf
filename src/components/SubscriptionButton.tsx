@@ -1,12 +1,23 @@
 "use client"
 import React from "react"
-import { Button } from "./ui/button"
+import { Button, type ButtonProps } from "./ui/button"
 import axios from "axios"
 import { useToast } from "@/components/hooks/use-toast"
+import { Loader2, Sparkles } from "lucide-react"
 
-type Props = { isPro: boolean }
+type Props = {
+  isPro: boolean
+  variant?: ButtonProps["variant"]
+  size?: ButtonProps["size"]
+  className?: string
+}
 
-const SubscriptionButton = (props: Props) => {
+const SubscriptionButton = ({
+  isPro,
+  variant = "secondary",
+  size,
+  className,
+}: Props) => {
   const [loading, setLoading] = React.useState(false)
   const { toast } = useToast()
   const handleSubscription = async () => {
@@ -25,8 +36,19 @@ const SubscriptionButton = (props: Props) => {
     }
   }
   return (
-    <Button disabled={loading} onClick={handleSubscription} variant="secondary">
-      {props.isPro ? "Manage Subscriptions" : "Get Pro"}
+    <Button
+      disabled={loading}
+      onClick={handleSubscription}
+      variant={variant}
+      size={size}
+      className={className}
+    >
+      {loading ? (
+        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+      ) : (
+        !isPro && <Sparkles className="mr-2 h-4 w-4" />
+      )}
+      {isPro ? "Manage subscription" : "Get Pro"}
     </Button>
   )
 }
