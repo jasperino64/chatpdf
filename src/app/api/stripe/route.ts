@@ -3,6 +3,7 @@
 import { db } from "@/lib/db"
 import { userSubscriptions } from "@/lib/db/schema"
 import { stripe } from "@/lib/stripe"
+import { checkSubscription } from "@/lib/subscription"
 import { auth, currentUser } from "@clerk/nextjs"
 import { eq } from "drizzle-orm"
 import { NextResponse } from "next/server"
@@ -22,23 +23,28 @@ export async function GET() {
       .select()
       .from(userSubscriptions)
       .where(eq(userSubscriptions.userId, userId))
-    if (_userSubscriptions[0] && _userSubscriptions[0].stripeCustomerId) {
-      // trying to cancel at the billing portal
+    const existingCustomerId = _userSubscriptions[0]?.stripeCustomerId
+    const isPro = await checkSubscription()
+
+    if (existingCustomerId && isPro) {
+      // active subscriber: manage/cancel at the billing portal
       const stripeSession = await stripe.billingPortal.sessions.create({
-        customer: _userSubscriptions[0].stripeCustomerId,
+        customer: existingCustomerId,
         return_url,
       })
       return NextResponse.json({ url: stripeSession.url })
     }
 
-    // user's first time trying to subscribe
+    // first-time subscriber, or returning after their subscription ended
     const stripeSession = await stripe.checkout.sessions.create({
       success_url: return_url,
       cancel_url: return_url,
       payment_method_types: ["card"],
       mode: "subscription",
       billing_address_collection: "auto",
-      customer_email: user?.emailAddresses[0].emailAddress,
+      ...(existingCustomerId
+        ? { customer: existingCustomerId }
+        : { customer_email: user?.emailAddresses[0]?.emailAddress }),
       line_items: [
         {
           price_data: {
@@ -61,7 +67,7 @@ export async function GET() {
     })
     return NextResponse.json({ url: stripeSession.url })
   } catch (error) {
-    console.log("stripe error", error)
+    console.error("stripe error", error)
     return new NextResponse("internal server error", { status: 500 })
   }
 }
